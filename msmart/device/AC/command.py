@@ -800,6 +800,10 @@ class CapabilitiesResponse(Response):
         return self._capabilities.get("fresh_air", False)
 
     @property
+    def sound(self) -> bool:
+        return self._capabilities.get("sound", False)
+
+    @property
     def swing_horizontal_angle(self) -> bool:
         return self._capabilities.get("swing_horizontal_angle", False)
 

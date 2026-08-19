@@ -600,6 +600,9 @@ class AirConditioner(Device):
         self._capabilities.set(
             AirConditioner.Capability.OUT_SILENT, res.out_silent)
 
+        self._capabilities.set(
+            AirConditioner.Capability.SOUND, res.sound)
+
         # Update supported properties from capabilities
         self._update_supported_properties()
 
