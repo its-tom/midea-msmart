@@ -817,6 +817,12 @@ class TestSetPropertiesCommand(unittest.TestCase):
             (PropertyId.BREEZE_CONTROL, 0x04): bytes([0x04]),
             (PropertyId.BREEZE_CONTROL, 0x00): bytes([0x00]),
 
+            # Sound/Prompt Tone: 0x01 - On, 0x00 - Off
+            (PropertyId.SOUND, True): bytes([0x01]),
+            (PropertyId.SOUND, False): bytes([0x00]),
+            (PropertyId.PROMPT_TONE, True): bytes([0x01]),
+            (PropertyId.PROMPT_TONE, False): bytes([0x00]),
+
             # IECO: 13 bytes ieco_frame, ieco_number, ieco_switch, ...
             (PropertyId.IECO, (1, True)): bytes([0, 1, 1]) + bytes(10),
             (PropertyId.IECO, (1, False)): bytes([0, 1, 0]) + bytes(10),
@@ -887,8 +893,11 @@ class TestPropertiesResponse(_TestResponseBase):
             (PropertyId.BREEZE_CONTROL, bytes([0x04])): 0x04,
             (PropertyId.BREEZE_CONTROL, bytes([0x00])): 0x00,
 
-            # Buzzer: Don't decode
-            (PropertyId.BUZZER, bytes([0x00])): None,
+            # Sound/Prompt Tone: 0x01 - On, 0x00 - Off
+            (PropertyId.SOUND, bytes([0x01])): True,
+            (PropertyId.SOUND, bytes([0x00])): False,
+            (PropertyId.PROMPT_TONE, bytes([0x01])): True,
+            (PropertyId.PROMPT_TONE, bytes([0x00])): False,
 
             # IECO: 2 bytes
             (PropertyId.IECO, bytes([0x00, 0x00])): False,
@@ -1000,8 +1009,8 @@ class TestPropertiesResponse(_TestResponseBase):
         # Assert response is a correct type
         self.assertEqual(type(resp), PropertiesResponse)
 
-        # Assert that the buzzer property is not decoded
-        self.assertIsNone(resp.get_property(PropertyId.BUZZER))
+        # Assert that the prompt tone property is decoded correctly
+        self.assertEqual(resp.get_property(PropertyId.PROMPT_TONE), False)
 
     def test_properties_execution_failed(self) -> None:
         """Test we error when decoding properties that had an execution error."""

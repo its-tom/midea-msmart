@@ -776,8 +776,8 @@ class AirConditioner(Device):
             _LOGGER.warning(
                 "Device %s is not capable of property %r.", self.id, prop)
 
-        # Always add buzzer property
-        properties[PropertyId.BUZZER] = self._beep_on
+        # Always add sound property
+        properties[PropertyId.SOUND] = self._beep_on
 
         # Build command with properties
         cmd = SetPropertiesCommand(properties)

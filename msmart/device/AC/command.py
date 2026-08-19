@@ -85,7 +85,7 @@ class CapabilityId(IntEnum):
     FAHRENHEIT = 0x0222
     DISPLAY_CONTROL = 0x0224
     TEMPERATURES = 0x0225
-    BUZZER = 0x022C  # TODO Reference refers to this as "sound". Is this different then buzzer?
+    SOUND = 0x022C
     MAIN_HORIZONTAL_GUIDE_STRIP = 0x0230  # ??
     SUP_HORIZONTAL_GUIDE_STRIP = 0x0231  # ??
     TWINS_MACHINE = 0x0232  # ??
@@ -98,7 +98,7 @@ class PropertyId(IntEnum):
     SWING_LR_ANGLE = 0x000A
     INDOOR_HUMIDITY = 0x0015  # TODO Reference refers to a potential bug with this
     BREEZELESS = 0x0018  # AKA "No Wind Sense"
-    BUZZER = 0x001A
+    PROMPT_TONE = 0x001A
     SELF_CLEAN = 0x0039
     BREEZE_AWAY = 0x0042  # AKA "Prevent Straight Wind"
     BREEZE_CONTROL = 0x0043  # AKA "FA No Wind Sense"
@@ -109,6 +109,7 @@ class PropertyId(IntEnum):
     OUT_SILENT = 0x00CD  # Portasplit outdoor silent mode
     IECO = 0x00E3
     ANION = 0x021E
+    SOUND = 0x022C
 
     @property
     def _supported(self) -> bool:
@@ -117,7 +118,8 @@ class PropertyId(IntEnum):
             PropertyId.BREEZE_AWAY,
             PropertyId.BREEZE_CONTROL,
             PropertyId.BREEZELESS,
-            PropertyId.BUZZER,
+            PropertyId.PROMPT_TONE,
+            PropertyId.SOUND,
             PropertyId.CASCADE,
             PropertyId.FLASH,
             PropertyId.FRESH_AIR,
@@ -134,12 +136,10 @@ class PropertyId(IntEnum):
         if not self._supported:
             raise NotImplementedError(f"{repr(self)} decode is not supported.")
 
-        if self in [PropertyId.BREEZELESS, PropertyId.FLASH, PropertyId.SELF_CLEAN]:
+        if self in [PropertyId.BREEZELESS, PropertyId.FLASH, PropertyId.SELF_CLEAN, PropertyId.SOUND, PropertyId.PROMPT_TONE]:
             return bool(data[0])
         elif self == PropertyId.BREEZE_AWAY:
             return data[0] == 2
-        elif self == PropertyId.BUZZER:
-            return None  # Don't decode buzzer
         elif self == PropertyId.CASCADE:
             # data[0] - wind_around, data[1] - wind_around_ud
             return data[1] if data[0] else 0
@@ -161,6 +161,8 @@ class PropertyId(IntEnum):
 
         if self == PropertyId.BREEZE_AWAY:
             return bytes([2 if args[0] else 1])
+        elif self in [PropertyId.SOUND, PropertyId.PROMPT_TONE]:
+            return bytes([1 if args[0] else 0])
         elif self == PropertyId.CASCADE:
             # data[0] - wind_around, data[1] - wind_around_ud
             return bytes([1 if args[0] else 0, args[0]])
@@ -567,7 +569,7 @@ class CapabilitiesResponse(Response):
             CapabilityId.BREEZE_AWAY: reader("breeze_away", get_value(1)),
             CapabilityId.BREEZE_CONTROL: reader("breeze_control", get_value(1)),
             CapabilityId.BREEZELESS: reader("breezeless", get_value(1)),
-            CapabilityId.BUZZER:  reader("buzzer", get_value(1)),
+            CapabilityId.SOUND:  reader("sound", get_value(1)),
             CapabilityId.CASCADE:  reader("cascade", get_value(1)),
             CapabilityId.DISPLAY_CONTROL: reader("display_control", any_of([1, 2, 100])),
             CapabilityId.ENERGY: [
