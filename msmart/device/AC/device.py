@@ -146,6 +146,7 @@ class AirConditioner(Device):
         OUT_SILENT = auto()
         PURIFIER = auto()
         SELF_CLEAN = auto()
+        SOUND = auto()
 
         DEFAULT = (
             CUSTOM_FAN_SPEED |
@@ -167,6 +168,8 @@ class AirConditioner(Device):
         PropertyId.RATE_SELECT: lambda s: s._rate_select,
         PropertyId.SWING_LR_ANGLE: lambda s: s._horizontal_swing_angle,
         PropertyId.SWING_UD_ANGLE: lambda s: s._vertical_swing_angle,
+        PropertyId.PROMPT_TONE: lambda s: s._beep_on,
+        PropertyId.SOUND: lambda s: s._sound,
     }
 
     _SUPPORTED_CAPABILITY_OVERRIDES = {
@@ -201,6 +204,7 @@ class AirConditioner(Device):
 
         self._fahrenheit_unit = False  # Display temperature in Fahrenheit
         self._display_on = False
+        self._sound = None
 
         # Advanced controls
         self._follow_me = False
@@ -402,6 +406,9 @@ class AirConditioner(Device):
 
             if (value := res.get_property(PropertyId.OUT_SILENT)) is not None:
                 self._out_silent = value
+
+            if (value := res.get_property(PropertyId.SOUND)) is not None:
+                self._sound = value
 
         elif isinstance(res, Group1Response):
             _LOGGER.debug("Group 1 response payload from device %s: %s",
@@ -609,6 +616,7 @@ class AirConditioner(Device):
             AirConditioner.Capability.IECO: PropertyId.IECO,
             AirConditioner.Capability.OUT_SILENT: PropertyId.OUT_SILENT,
             AirConditioner.Capability.SELF_CLEAN: PropertyId.SELF_CLEAN,
+            AirConditioner.Capability.SOUND: PropertyId.SOUND,
             AirConditioner.Capability.SWING_HORIZONTAL_ANGLE: PropertyId.SWING_LR_ANGLE,
             AirConditioner.Capability.SWING_VERTICAL_ANGLE: PropertyId.SWING_UD_ANGLE,
         }
@@ -624,6 +632,10 @@ class AirConditioner(Device):
         # Rate select is a special case. It's property based but not controlled by a capability flag
         if self._supported_rate_selects != [AirConditioner.RateSelect.OFF]:
             self._supported_properties.add(PropertyId.RATE_SELECT)
+
+        # Always support prompt tone if the device supports any properties
+        if len(self._supported_properties) > 0:
+            self._supported_properties.add(PropertyId.PROMPT_TONE)
 
     async def _send_commands_get_responses(self, commands: Union[Command, list[Command]]) -> list[Response]:
         """Send a list of commands and return all valid responses."""
@@ -776,9 +788,6 @@ class AirConditioner(Device):
             _LOGGER.warning(
                 "Device %s is not capable of property %r.", self.id, prop)
 
-        # Always add sound property
-        properties[PropertyId.SOUND] = self._beep_on
-
         # Build command with properties
         cmd = SetPropertiesCommand(properties)
         for response in await self._send_commands_get_responses(cmd):
@@ -876,6 +885,16 @@ class AirConditioner(Device):
     @beep.setter
     def beep(self, tone: bool) -> None:
         self._beep_on = tone
+        self._updated_properties.add(PropertyId.PROMPT_TONE)
+
+    @property
+    def sound(self) -> Optional[bool]:
+        return self._sound
+
+    @sound.setter
+    def sound(self, enabled: bool) -> None:
+        self._sound = enabled
+        self._updated_properties.add(PropertyId.SOUND)
 
     @property
     def power_state(self) -> Optional[bool]:
@@ -1396,6 +1415,7 @@ class AirConditioner(Device):
             "sleep": self.sleep,
             "display_on": self.display_on,
             "beep": self.beep,
+            "sound": self.sound,
             "fahrenheit": self.fahrenheit,
             "filter_alert": self.filter_alert,
             "follow_me": self.follow_me,
