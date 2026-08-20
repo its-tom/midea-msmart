@@ -791,6 +791,9 @@ class AirConditioner(Device):
             _LOGGER.warning(
                 "Device %s is not capable of property %r.", self.id, prop)
 
+        # Always add prompt tone property
+        properties[PropertyId.PROMPT_TONE] = self._beep_on
+
         # Build command with properties
         cmd = SetPropertiesCommand(properties)
         for response in await self._send_commands_get_responses(cmd):
