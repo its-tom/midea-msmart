@@ -165,11 +165,11 @@ class AirConditioner(Device):
         PropertyId.FRESH_AIR: lambda s: s._fresh_air_fan_speed,
         PropertyId.IECO: lambda s: (s._ieco_number, s._ieco),
         PropertyId.OUT_SILENT: lambda s: s._out_silent,
+        PropertyId.PROMPT_TONE: lambda s: s._beep_on,
         PropertyId.RATE_SELECT: lambda s: s._rate_select,
+        PropertyId.SOUND: lambda s: s._sound,
         PropertyId.SWING_LR_ANGLE: lambda s: s._horizontal_swing_angle,
         PropertyId.SWING_UD_ANGLE: lambda s: s._vertical_swing_angle,
-        PropertyId.PROMPT_TONE: lambda s: s._beep_on,
-        PropertyId.SOUND: lambda s: s._sound,
     }
 
     _SUPPORTED_CAPABILITY_OVERRIDES = {

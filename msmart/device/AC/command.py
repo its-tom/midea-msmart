@@ -118,15 +118,15 @@ class PropertyId(IntEnum):
             PropertyId.BREEZE_AWAY,
             PropertyId.BREEZE_CONTROL,
             PropertyId.BREEZELESS,
-            PropertyId.PROMPT_TONE,
-            PropertyId.SOUND,
             PropertyId.CASCADE,
             PropertyId.FLASH,
             PropertyId.FRESH_AIR,
             PropertyId.IECO,
             PropertyId.OUT_SILENT,
+            PropertyId.PROMPT_TONE,
             PropertyId.RATE_SELECT,
             PropertyId.SELF_CLEAN,
+            PropertyId.SOUND,
             PropertyId.SWING_LR_ANGLE,
             PropertyId.SWING_UD_ANGLE,
         ]
@@ -136,7 +136,7 @@ class PropertyId(IntEnum):
         if not self._supported:
             raise NotImplementedError(f"{repr(self)} decode is not supported.")
 
-        if self in [PropertyId.BREEZELESS, PropertyId.FLASH, PropertyId.SELF_CLEAN, PropertyId.SOUND, PropertyId.PROMPT_TONE]:
+        if self in [PropertyId.BREEZELESS, PropertyId.FLASH, PropertyId.PROMPT_TONE, PropertyId.SELF_CLEAN, PropertyId.SOUND]:
             return bool(data[0])
         elif self == PropertyId.BREEZE_AWAY:
             return data[0] == 2
@@ -161,7 +161,7 @@ class PropertyId(IntEnum):
 
         if self == PropertyId.BREEZE_AWAY:
             return bytes([2 if args[0] else 1])
-        elif self in [PropertyId.SOUND, PropertyId.PROMPT_TONE]:
+        elif self in [PropertyId.PROMPT_TONE, PropertyId.SOUND]:
             return bytes([1 if args[0] else 0])
         elif self == PropertyId.CASCADE:
             # data[0] - wind_around, data[1] - wind_around_ud
