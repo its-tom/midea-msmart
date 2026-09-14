@@ -165,7 +165,6 @@ class AirConditioner(Device):
         PropertyId.FRESH_AIR: lambda s: s._fresh_air_fan_speed,
         PropertyId.IECO: lambda s: (s._ieco_number, s._ieco),
         PropertyId.OUT_SILENT: lambda s: s._out_silent,
-        PropertyId.PROMPT_TONE: lambda s: s._beep_on,
         PropertyId.RATE_SELECT: lambda s: s._rate_select,
         PropertyId.SOUND: lambda s: s._sound,
         PropertyId.SWING_LR_ANGLE: lambda s: s._horizontal_swing_angle,
@@ -188,7 +187,6 @@ class AirConditioner(Device):
                          device_type=DeviceType.AIR_CONDITIONER, **kwargs)
 
         # Basic controls
-        self._beep_on = False
         self._power_state = False
         self._target_temperature = 17.0
         self._target_humidity = 40
@@ -204,7 +202,7 @@ class AirConditioner(Device):
 
         self._fahrenheit_unit = False  # Display temperature in Fahrenheit
         self._display_on = False
-        self._sound = None
+        self._sound = False
 
         # Advanced controls
         self._follow_me = False
@@ -636,10 +634,6 @@ class AirConditioner(Device):
         if self._supported_rate_selects != [AirConditioner.RateSelect.OFF]:
             self._supported_properties.add(PropertyId.RATE_SELECT)
 
-        # Always support prompt tone if the device supports any properties
-        if len(self._supported_properties) > 0:
-            self._supported_properties.add(PropertyId.PROMPT_TONE)
-
     async def _send_commands_get_responses(self, commands: Union[Command, list[Command]]) -> list[Response]:
         """Send a list of commands and return all valid responses."""
 
@@ -726,7 +720,7 @@ class AirConditioner(Device):
 
         # Send the command and ignore all responses
         cmd = ToggleDisplayCommand()
-        cmd.beep_on = self._beep_on
+        cmd.beep_on = self._sound
         await self._send_commands_get_responses(cmd)
 
         # Force a refresh to get the updated display state
@@ -791,8 +785,8 @@ class AirConditioner(Device):
             _LOGGER.warning(
                 "Device %s is not capable of property %r.", self.id, prop)
 
-        # Always add prompt tone property
-        properties[PropertyId.PROMPT_TONE] = self._beep_on
+        # Always add buzzer property
+        properties[PropertyId.BUZZER] = self._sound
 
         # Build command with properties
         cmd = SetPropertiesCommand(properties)
@@ -838,7 +832,7 @@ class AirConditioner(Device):
         def or_default(v, d) -> Any: return v if v is not None else d
 
         cmd = SetStateCommand()
-        cmd.beep_on = self._beep_on
+        cmd.beep_on = self._sound
         cmd.power_on = or_default(self._power_state, False)
         cmd.target_temperature = or_default(self._target_temperature, 25)
         cmd.operational_mode = self._operational_mode
@@ -883,24 +877,6 @@ class AirConditioner(Device):
 
         # Update supported properties
         self._update_supported_properties()
-
-    @property
-    def beep(self) -> bool:
-        return self._beep_on
-
-    @beep.setter
-    def beep(self, tone: bool) -> None:
-        self._beep_on = tone
-        self._updated_properties.add(PropertyId.PROMPT_TONE)
-
-    @property
-    def sound(self) -> Optional[bool]:
-        return self._sound
-
-    @sound.setter
-    def sound(self, enabled: bool) -> None:
-        self._sound = enabled
-        self._updated_properties.add(PropertyId.SOUND)
 
     @property
     def power_state(self) -> Optional[bool]:
@@ -1186,6 +1162,19 @@ class AirConditioner(Device):
         return self._display_on
 
     @property
+    def supports_sound(self) -> bool:
+        return self._capabilities.has(AirConditioner.Capability.SOUND)
+
+    @property
+    def sound(self) -> Optional[bool]:
+        return self._sound
+
+    @sound.setter
+    def sound(self, enabled: bool) -> None:
+        self._sound = enabled
+        self._updated_properties.add(PropertyId.SOUND)
+
+    @property
     def supports_filter_reminder(self) -> bool:
         return self._capabilities.has(AirConditioner.Capability.FILTER_REMINDER)
 
@@ -1420,7 +1409,6 @@ class AirConditioner(Device):
             "freeze_protection": self.freeze_protection,
             "sleep": self.sleep,
             "display_on": self.display_on,
-            "beep": self.beep,
             "sound": self.sound,
             "fahrenheit": self.fahrenheit,
             "filter_alert": self.filter_alert,
@@ -1566,3 +1554,13 @@ class AirConditioner(Device):
     @deprecated("flash")
     def flash_cool(self, enabled: bool) -> None:
         self.flash = enabled
+
+    @property
+    @deprecated("sound")
+    def beep(self) -> Optional[bool]:
+        return self.sound
+
+    @beep.setter
+    @deprecated("sound")
+    def beep(self, enabled: bool) -> None:
+        self.sound = enabled

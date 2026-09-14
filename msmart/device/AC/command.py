@@ -98,7 +98,7 @@ class PropertyId(IntEnum):
     SWING_LR_ANGLE = 0x000A
     INDOOR_HUMIDITY = 0x0015  # TODO Reference refers to a potential bug with this
     BREEZELESS = 0x0018  # AKA "No Wind Sense"
-    PROMPT_TONE = 0x001A
+    BUZZER = 0x001A
     SELF_CLEAN = 0x0039
     BREEZE_AWAY = 0x0042  # AKA "Prevent Straight Wind"
     BREEZE_CONTROL = 0x0043  # AKA "FA No Wind Sense"
@@ -118,12 +118,12 @@ class PropertyId(IntEnum):
             PropertyId.BREEZE_AWAY,
             PropertyId.BREEZE_CONTROL,
             PropertyId.BREEZELESS,
+            PropertyId.BUZZER,
             PropertyId.CASCADE,
             PropertyId.FLASH,
             PropertyId.FRESH_AIR,
             PropertyId.IECO,
             PropertyId.OUT_SILENT,
-            PropertyId.PROMPT_TONE,
             PropertyId.RATE_SELECT,
             PropertyId.SELF_CLEAN,
             PropertyId.SOUND,
@@ -136,10 +136,12 @@ class PropertyId(IntEnum):
         if not self._supported:
             raise NotImplementedError(f"{repr(self)} decode is not supported.")
 
-        if self in [PropertyId.BREEZELESS, PropertyId.FLASH, PropertyId.PROMPT_TONE, PropertyId.SELF_CLEAN, PropertyId.SOUND]:
+        if self in [PropertyId.BREEZELESS, PropertyId.FLASH, PropertyId.SELF_CLEAN, PropertyId.SOUND]:
             return bool(data[0])
         elif self == PropertyId.BREEZE_AWAY:
             return data[0] == 2
+        elif self == PropertyId.BUZZER:
+            return None  # Don't decode buzzer
         elif self == PropertyId.CASCADE:
             # data[0] - wind_around, data[1] - wind_around_ud
             return data[1] if data[0] else 0
@@ -161,8 +163,6 @@ class PropertyId(IntEnum):
 
         if self == PropertyId.BREEZE_AWAY:
             return bytes([2 if args[0] else 1])
-        elif self in [PropertyId.PROMPT_TONE, PropertyId.SOUND]:
-            return bytes([1 if args[0] else 0])
         elif self == PropertyId.CASCADE:
             # data[0] - wind_around, data[1] - wind_around_ud
             return bytes([1 if args[0] else 0, args[0]])

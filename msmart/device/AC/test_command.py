@@ -817,9 +817,9 @@ class TestSetPropertiesCommand(unittest.TestCase):
             (PropertyId.BREEZE_CONTROL, 0x04): bytes([0x04]),
             (PropertyId.BREEZE_CONTROL, 0x00): bytes([0x00]),
 
-            # Prompt Tone/Sound: 0x01 - On, 0x00 - Off
-            (PropertyId.PROMPT_TONE, True): bytes([0x01]),
-            (PropertyId.PROMPT_TONE, False): bytes([0x00]),
+            # Buzzer/Sound: 0x01 - On, 0x00 - Off
+            (PropertyId.BUZZER, True): bytes([0x01]),
+            (PropertyId.BUZZER, False): bytes([0x00]),
             (PropertyId.SOUND, True): bytes([0x01]),
             (PropertyId.SOUND, False): bytes([0x00]),
 
@@ -893,9 +893,7 @@ class TestPropertiesResponse(_TestResponseBase):
             (PropertyId.BREEZE_CONTROL, bytes([0x04])): 0x04,
             (PropertyId.BREEZE_CONTROL, bytes([0x00])): 0x00,
 
-            # Prompt Tone/Sound: 0x01 - On, 0x00 - Off
-            (PropertyId.PROMPT_TONE, bytes([0x01])): True,
-            (PropertyId.PROMPT_TONE, bytes([0x00])): False,
+            # Sound: 0x01 - On, 0x00 - Off
             (PropertyId.SOUND, bytes([0x01])): True,
             (PropertyId.SOUND, bytes([0x00])): False,
 
@@ -1009,8 +1007,8 @@ class TestPropertiesResponse(_TestResponseBase):
         # Assert response is a correct type
         self.assertEqual(type(resp), PropertiesResponse)
 
-        # Assert that the prompt tone property is decoded correctly
-        self.assertEqual(resp.get_property(PropertyId.PROMPT_TONE), False)
+        # Assert that the buzzer property is not decoded
+        self.assertIsNone(resp.get_property(PropertyId.BUZZER))
 
     def test_properties_execution_failed(self) -> None:
         """Test we error when decoding properties that had an execution error."""
